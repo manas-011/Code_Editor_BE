@@ -9,13 +9,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/manas-011/code-editor-backend/configs"
-	"github.com/manas-011/code-editor-backend/routes"
+	"github.com/manas-011/code-editor-backend/config"
+	"github.com/manas-011/code-editor-backend/route"
 )
 
 func main(){
 	// Load configuration
 	cfg := config.Load()
+
+	// Setup db
+	config.ConnectMongo()
 
 	// Setup router (Gin)
 	router := route.SetupRouter()

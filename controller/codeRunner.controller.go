@@ -6,9 +6,9 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/manas-011/code-editor-backend/models"
-	"github.com/manas-011/code-editor-backend/controllers/executor"
-	"github.com/manas-011/code-editor-backend/middlewares/limiter"
+	"github.com/manas-011/code-editor-backend/model"
+	"github.com/manas-011/code-editor-backend/controller/executor"
+	"github.com/manas-011/code-editor-backend/middleware/limiter"
 )
 
 
@@ -30,7 +30,7 @@ func ExecCode(c *gin.Context){
 
 	stdout, stderr, err := executor.Execute(ctx, req.Language, req.Code, req.Input)
 
-	result := models.ExecuteResult {
+	result := model.ExecuteResult {
 		Status: "success",
 		Stdout: stdout,
 		Stderr: stderr

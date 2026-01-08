@@ -2,7 +2,7 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/manas-011/code-editor-backend/controllers"
+	"github.com/manas-011/code-editor-backend/controller"
 )
 
 func SetupRouter() *gin.Engine {
