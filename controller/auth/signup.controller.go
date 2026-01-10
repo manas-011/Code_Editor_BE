@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"auth-app/internal/db"
-	"auth-app/internal/model"
-	"auth-app/internal/service"
-	"auth-app/internal/validators"
+	"github.com/manas-011/code-editor-backend/config"
+	"github.com/manas-011/code-editor-backend/model"
+	"github.com/manas-011/code-editor-backend/util"
+	"github.com/manas-011/code-editor-backend/service"
+	"github.com/manas-011/code-editor-backend/validator"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,8 +29,8 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if !validators.IsValidEmail(req.Email) ||
-		!validators.IsStrongPassword(req.Password) {
+	if !validator.IsValidEmail(req.Email) ||
+		!validator.IsStrongPassword(req.Password) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid email or password"})
 		return
 	}
@@ -40,9 +41,9 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	otp := services.GenerateOTP()
+	otp := util.GenerateRandomNumber()
 
-	tempUser := models.TempUser{
+	tempUser := model.SignUpUser{
 		Email:     req.Email,
 		Password:  string(hashedPwd),
 		OTP:       otp,
@@ -50,15 +51,15 @@ func Signup(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	res, err := db.TempUserCollection.InsertOne(context.TODO(), tempUser)
+	res, err := config.DB.Collection("signup_users").InsertOne(context.TODO(), tempUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
-	services.SendOTPEmail(req.Email, otp)
+	service.SendEmail(req.Email, otp)
 
-	encID, err := services.Encrypt(res.InsertedID.(primitive.ObjectID).Hex())
+	encID, err := util.Encrypt(res.InsertedID.(primitive.ObjectID).Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "encryption failed"})
 		return

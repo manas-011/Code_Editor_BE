@@ -33,11 +33,11 @@ func ExecCode(c *gin.Context){
 	result := model.ExecuteResult {
 		Status: "success",
 		Stdout: stdout,
-		Stderr: stderr
+		Stderr: stderr,
 	}
 
 	if ctx.Err() == context.DeadlineExceeded {
-		result.Status == "TLE"
+		result.Status = "TLE"
 	}else if err != nil {
 		result.Status = "RE"
 	}

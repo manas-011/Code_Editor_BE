@@ -4,9 +4,10 @@ import (
 	"context"
 	"log"
 	"time"
+	"os"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+    "go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var (
@@ -16,26 +17,28 @@ var (
 
 
 func ConnectMongo() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
-	// Create client
+	// Use the SetServerAPIOptions() method to set the version of the Stable API on the client
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+
+	opts := options.Client().ApplyURI(os.Getenv("MONGO_URL")).SetServerAPIOptions(serverAPI)
+	   
 	client, err := mongo.Connect(
-		ctx,
-		options.Client().ApplyURI(""),
+		opts,
 	)
 	if err != nil {
 		log.Fatal("Mongo connect error:", err)
 	}
 
-	// Verify connection
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if err := client.Ping(ctx, nil); err != nil {
 		log.Fatal("Mongo ping error:", err)
 	}
 
-	log.Println("✅ MongoDB connected")
+	log.Println("MongoDB connected..")
 
-	// Assign globals
 	Client = client
 	DB = client.Database("code_editor")
 }
+

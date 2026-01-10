@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"auth-app/internal/db"
-	"auth-app/internal/services"
+	"github.com/manas-011/code-editor-backend/config"
+	"github.com/manas-011/code-editor-backend/util"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 		Password string             `bson:"password"`
 	}
 
-	err := db.UserCollection.FindOne(
+	err := config.DB.Collection("verified_users").FindOne(
 		context.TODO(),
 		bson.M{"email": req.Email},
 	).Decode(&user)
@@ -64,7 +64,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate JWT (7 days)
-	token, err := services.GenerateJWT(user.ID.Hex())
+	token, err := util.GenerateJWT(user.ID.Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "token generation failed",

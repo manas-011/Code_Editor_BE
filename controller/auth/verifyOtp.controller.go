@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"auth-app/internal/db"
-	"auth-app/internal/models"
-	"auth-app/internal/services"
+	"github.com/manas-011/code-editor-backend/config"
+	"github.com/manas-011/code-editor-backend/model"
+	"github.com/manas-011/code-editor-backend/util"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,7 +32,7 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	idStr, err := services.Decrypt(cookie)
+	idStr, err := util.Decrypt(cookie)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
 		return
@@ -44,8 +44,8 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	var tempUser models.TempUser
-	err = db.TempUserCollection.FindOne(
+	var tempUser model.SignUpUser
+	err = config.DB.Collection("signup_users").FindOne(
 		context.TODO(),
 		bson.M{"_id": objID},
 	).Decode(&tempUser)
@@ -60,21 +60,21 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	user := models.User{
+	user := model.VerifiedUser{
 		Email:     tempUser.Email,
 		Password:  tempUser.Password,
 		CreatedAt: time.Now(),
 	}
 
-	res, err := db.UserCollection.InsertOne(context.TODO(), user)
+	res, err := config.DB.Collection("verified_users").InsertOne(context.TODO(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user creation failed"})
 		return
 	}
 
-	db.TempUserCollection.DeleteOne(context.TODO(), bson.M{"_id": objID})
+	config.DB.Collection("signup_users").DeleteOne(context.TODO(), bson.M{"_id": objID})
 
-	token, err := services.GenerateJWT(res.InsertedID.(primitive.ObjectID).Hex())
+	token, err := util.GenerateJWT(res.InsertedID.(primitive.ObjectID).Hex())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 		return
