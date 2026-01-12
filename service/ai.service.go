@@ -3,44 +3,65 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
+	"time"
 )
 
-const hfURL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-
-type HFRequest struct {
+type hfRequest struct {
 	Inputs string `json:"inputs"`
 }
 
-type HFResponse []struct {
+type hfResponse []struct {
 	GeneratedText string `json:"generated_text"`
 }
 
-func AskAI(question string) (string, error) {
-	body, _ := json.Marshal(HFRequest{
-		Inputs: question,
+func CallHuggingFace(prompt string) (string, error) {
+
+	apiKey := os.Getenv("HF_API_KEY")
+	model := os.Getenv("HF_MODEL")
+
+	if apiKey == "" || model == "" {
+		return "", errors.New("huggingface env vars not set")
+	}
+
+	url := "https://api-inference.huggingface.co/models/" + model
+
+	body, _ := json.Marshal(hfRequest{
+		Inputs: prompt,
 	})
 
-	req, _ := http.NewRequest("POST", hfURL, bytes.NewBuffer(body))
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("HF_API_KEY"))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: 60 * time.Second, // HF models can be slow
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("AI API failed with status %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("huggingface api error")
 	}
 
-	var result HFResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	var hfRes hfResponse
+	if err := json.NewDecoder(resp.Body).Decode(&hfRes); err != nil {
 		return "", err
 	}
 
-	return result[0].GeneratedText, nil
+	if len(hfRes) == 0 {
+		return "", errors.New("empty response from huggingface")
+	}
+
+	return hfRes[0].GeneratedText, nil
 }

@@ -2,29 +2,56 @@ package ai
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/manas-011/code-editor-backend/service"
 )
 
-type AskRequest struct {
-	Question string `json:"question"`
+
+type AskAIRequest struct {
+	Prompt   string `json:"prompt" binding:"required"`
+	Language string `json:"language"`
 }
 
-func AskHandler(c *gin.Context) {
-	var req AskRequest
+func AskAI(c *gin.Context) {
+
+	var req AskAIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request payload",
+		})
 		return
 	}
 
-	answer, err := service.AskAI(req.Question)
+	prompt := buildPrompt(req.Language, req.Prompt)
+
+	response, err := services.CallHuggingFace(prompt)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"answer": answer,
+		"output": response,
 	})
+}
+
+// prompt engineering (important for quality)
+func buildPrompt(language, userPrompt string) string {
+
+	if language == "" {
+		return userPrompt
+	}
+
+	var sb strings.Builder
+	sb.WriteString("You are an expert ")
+	sb.WriteString(language)
+	sb.WriteString(" developer.\n")
+	sb.WriteString("Write clean, production-ready code.\n\n")
+	sb.WriteString(userPrompt)
+
+	return sb.String()
 }
