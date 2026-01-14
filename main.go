@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/manas-011/code-editor-backend/config"
 	"github.com/manas-011/code-editor-backend/route"
+	"github.com/rs/cors"
 )
 
 func main(){
@@ -26,9 +27,17 @@ func main(){
 
 	router := route.SetupRouter()
 
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+	})
+	
+	handler := c.Handler(router)
+	
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
-		Handler: router,
+		Handler: handler,
 		ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout: 60 * time.Second,

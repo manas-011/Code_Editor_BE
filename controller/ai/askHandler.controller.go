@@ -26,7 +26,7 @@ func AskAI(c *gin.Context) {
 
 	prompt := buildPrompt(req.Language, req.Prompt)
 
-	response, err := services.CallHuggingFace(prompt)
+	response, err := service.CallHuggingFace(prompt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
