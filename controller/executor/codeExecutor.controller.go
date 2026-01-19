@@ -3,60 +3,58 @@ package executor
 import (
 	"context"
 	"errors"
+
+	"github.com/manas-011/code-editor-backend/model"
 )
 
-func Execute(ctx context.Context, lang, code, input string) (string, string, error) {
+func Execute(ctx context.Context, lang, code, input string) (*model.JudgeResult, error) {
 	switch lang {
 
 	case "go":
 		return RunInDocker(
 			ctx,
+			"go",
 			"golang:1.22-alpine",
 			code,
 			input,
-			[]string{
-				"sh", "-c",
-				"go run /code/main.go < /code/input.txt",
-			},
+			[]string{"go", "build", "-o", "app", "main.go"},
+			[]string{"sh", "-c", "./app < input.txt"},
 		)
 
 	case "cpp":
 		return RunInDocker(
 			ctx,
+			"cpp",
 			"gcc:13",
 			code,
 			input,
-			[]string{
-				"sh", "-c",
-				"g++ /code/main.cpp -O2 -o /code/a.out && /code/a.out < /code/input.txt",
-			},
+			[]string{"g++", "main.cpp", "-O2", "-std=gnu++20", "-o", "a.out"},
+			[]string{"sh", "-c", "./a.out < input.txt"},
 		)
 
 	case "java":
 		return RunInDocker(
 			ctx,
-			"openjdk:21-slim",
+			"java",
+			"eclipse-temurin:21-jdk",
 			code,
 			input,
-			[]string{
-				"sh", "-c",
-				"javac /code/Main.java && java -cp /code Main < /code/input.txt",
-			},
+			[]string{"javac", "Main.java"},
+			[]string{"sh", "-c", "java Main < input.txt"},
 		)
 
 	case "python":
 		return RunInDocker(
 			ctx,
+			"py",
 			"python:3.12-slim",
 			code,
 			input,
-			[]string{
-				"sh", "-c",
-				"python3 /code/main.py < /code/input.txt",
-			},
+			nil, // no compile step
+			[]string{"sh", "-c", "python3 main.py < input.txt"},
 		)
 
 	default:
-		return "", "", errors.New("unsupported language")
+		return nil, errors.New("unsupported language")
 	}
 }

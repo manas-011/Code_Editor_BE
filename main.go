@@ -38,9 +38,9 @@ func main(){
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: handler,
-		ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
-		IdleTimeout: 60 * time.Second,
+		//ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
+		//WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
+		//IdleTimeout: 60 * time.Second,
 	}
 
 	// Start server in a goroutine
