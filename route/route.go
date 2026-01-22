@@ -19,10 +19,11 @@ func SetupRouter() *gin.Engine {
 	r.GET("/health", controller.HealthCheck)
 	r.POST("/app/exec", controller.ExecCode)
 	r.POST("/app/askAI", ai.AskAI)
-	r.POST("/auth/signup", auth.Signup)
-	r.POST("/auth/verifyOtp", auth.VerifyOTP)
-	r.POST("/auth/login", auth.Login)
-	r.POST("/auth/logout", auth.Logout) 
+	r.POST("/auth/googleOAuth", auth.GoogleAuthHandler)
+	// r.POST("/auth/signup", auth.Signup)
+	// r.POST("/auth/verifyOtp", auth.VerifyOTP)
+	// r.POST("/auth/login", auth.Login)
+	// r.POST("/auth/logout", auth.Logout) 
 
 	return r 
 }

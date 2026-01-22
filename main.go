@@ -22,6 +22,7 @@ func main(){
 	}
 	
 	cfg := config.Load()
+	// call oauth config
 
 	config.ConnectMongo()
 
@@ -31,6 +32,7 @@ func main(){
 		AllowedOrigins: []string{"http://localhost:5173"},
 		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		AllowCredentials: true, // REQUIRED for cookies
 	})
 	
 	handler := c.Handler(router)
@@ -38,9 +40,9 @@ func main(){
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: handler,
-		//ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
-		//WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
-		//IdleTimeout: 60 * time.Second,
+		ReadTimeout: time.Duration(cfg.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
+		IdleTimeout: 60 * time.Second,
 	}
 
 	// Start server in a goroutine
